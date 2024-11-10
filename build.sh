@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-elm make src/* --output=www/index.html
+elm make src/Main.elm --output=www/elm.js

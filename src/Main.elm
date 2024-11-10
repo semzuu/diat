@@ -1,60 +1,93 @@
 module Main exposing (main)
 
+import Task
+import File
 import Browser
+import Browser.Events
 import Html
 import Html.Attributes
 import Html.Events
 import Markdown
 import Array
+import Json.Decode
+import SlideLoader
 
 main =
-  Browser.sandbox
+  Browser.element
     { init = init
     , update = update
     , view = view
+    , subscriptions = subscriptions
     }
 
 type alias Model =
-  { slides: List String
-  , count: Int
+  { loaderId: String
   , index: Int
+  , slides: List String
   }
 
 type Msg
-  = NextSlide Int Int
-  | PrevSlide Int
+  = KeyPress String
+  | SlideSelected
+  | SlideLoaded SlideLoader.Slides
 
-init: Model
-init =
-  let
-    slides = List.map String.trim
-      (String.split "---" """
-# First Slide
-Some Text in the first Slide  
----
-# Second Slide
-Can use images and links  
-[link](https://www.example.com)  
-![cat_image](https://cataas.com/cat)  
----
-# Third Slide
-Can use <mark>HTML</mark> Tags directly  
-      """)
-  in
-    Model slides (List.length slides) 1
+subscriptions: Model -> Sub Msg
+subscriptions model =
+  Sub.batch
+  [ Browser.Events.onKeyDown
+    <| Json.Decode.map KeyPress
+    <| Json.Decode.field "code" Json.Decode.string
+  , SlideLoader.slideContentRead SlideLoaded
+  ]
 
-update: Msg -> Model -> Model
+init: () -> (Model, Cmd Msg)
+init _ =
+  ( Model "slide-loader" 1 []
+  , Cmd.none
+  )
+
+update: Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
   case msg of
-    NextSlide currIndex count ->
-      { model | index = min count (currIndex + 1) }
-    PrevSlide currIndex ->
-      { model | index = max 1 (currIndex - 1) }
+    SlideSelected ->
+      ( model
+      , SlideLoader.slideSelected model.loaderId
+      )
+    SlideLoaded data ->
+      let
+        newSlides =
+          { content = data.content
+          , name = data.name
+          }
+      in
+        ( { model
+          | slides =
+            String.trim newSlides.content
+            |> String.split "---"
+          }
+        , Cmd.none
+        )
+    KeyPress keyCode ->
+      case keyCode of
+        "ArrowRight" ->
+          ( { model | index = min (List.length model.slides) (model.index + 1) }
+          , Cmd.none
+          )
+        "ArrowLeft" ->
+          ( { model | index = max 1 (model.index - 1) }
+          , Cmd.none
+          )
+        _ ->
+          ( model
+          , Cmd.none
+          )
+
 
 view: Model -> Html.Html Msg
 view model =
   Html.div []
-  [ viewControls model
+  [ viewLoader model
+  , viewControls model
   , viewSlide model
   ]
 
@@ -68,9 +101,19 @@ viewSlide model =
 viewControls: Model -> Html.Html Msg
 viewControls model =
   Html.div [ Html.Attributes.style "background-color" "#ed1818" ]
-  [ Html.button [ Html.Events.onClick (PrevSlide model.index ) ] [ Html.text "Prev" ]
-  , Html.text ("Slide " ++ (String.fromInt model.index) ++ "/" ++ (String.fromInt model.count))
-  , Html.button [ Html.Events.onClick (NextSlide model.index model.count) ] [ Html.text "Next" ]
+  [ Html.button [ Html.Events.onClick (KeyPress "ArrowLeft") ] [ Html.text "Prev" ]
+  , Html.text ("Slide " ++ (String.fromInt model.index) ++ "/" ++ (String.fromInt (List.length model.slides)))
+  , Html.button [ Html.Events.onClick (KeyPress "ArrowRight") ] [ Html.text "Next" ]
+  ]
+
+viewLoader: Model -> Html.Html Msg
+viewLoader model =
+  Html.div []
+  [ Html.input
+    [ Html.Attributes.type_ "file"
+    , Html.Attributes.id model.loaderId
+    , Html.Events.on "change" (Json.Decode.succeed SlideSelected)
+    ] []
   ]
 
 markdownOptions: Markdown.Options
