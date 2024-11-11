@@ -1,0 +1,35 @@
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.slide-controls {
+  background-color: #ed1818;
+  position: absolute;
+  top: 0;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  grid-template-columns: 1fr 2fr 1fr 1fr;
+  width: 100%;
+  height: 3em;
+  opacity: 0;
+}
+
+.slide-controls:hover {
+  opacity: 1;
+}
+
+.slide-view {
+  background-color: #181818;
+  color: #ededed;
+  overflow: hidden;
+}
+
+.slide {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}

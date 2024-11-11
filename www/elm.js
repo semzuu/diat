@@ -5798,7 +5798,18 @@ var $author$project$Main$update = F2(
 		}
 	});
 var $elm$html$Html$div = _VirtualDom_node('div');
+var $author$project$Main$SlideSelected = {$: 'SlideSelected'};
 var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$string(string));
+	});
+var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
+var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
+var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -5816,16 +5827,15 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
-var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
-var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
+var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
 var $author$project$Main$viewControls = function (model) {
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
 			[
-				A2($elm$html$Html$Attributes$style, 'background-color', '#ed1818')
+				$elm$html$Html$Attributes$class('slide-controls')
 			]),
 		_List_fromArray(
 			[
@@ -5853,26 +5863,7 @@ var $author$project$Main$viewControls = function (model) {
 				_List_fromArray(
 					[
 						$elm$html$Html$text('Next')
-					]))
-			]));
-};
-var $author$project$Main$SlideSelected = {$: 'SlideSelected'};
-var $elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$string(string));
-	});
-var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
-var $elm$html$Html$input = _VirtualDom_node('input');
-var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
-var $author$project$Main$viewLoader = function (model) {
-	return A2(
-		$elm$html$Html$div,
-		_List_Nil,
-		_List_fromArray(
-			[
+					])),
 				A2(
 				$elm$html$Html$input,
 				_List_fromArray(
@@ -5983,17 +5974,29 @@ var $elm$core$Maybe$withDefault = F2(
 		}
 	});
 var $author$project$Main$viewSlide = function (model) {
-	return A3(
-		$elm_explorations$markdown$Markdown$toHtmlWith,
-		$author$project$Main$markdownOptions,
-		_List_Nil,
-		A2(
-			$elm$core$Maybe$withDefault,
-			'Oops, no slide for you',
-			A2(
-				$elm$core$Array$get,
-				model.index - 1,
-				$elm$core$Array$fromList(model.slides))));
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('slide-view')
+			]),
+		_List_fromArray(
+			[
+				A3(
+				$elm_explorations$markdown$Markdown$toHtmlWith,
+				$author$project$Main$markdownOptions,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('slide')
+					]),
+				A2(
+					$elm$core$Maybe$withDefault,
+					'Oops, no slide for you',
+					A2(
+						$elm$core$Array$get,
+						model.index - 1,
+						$elm$core$Array$fromList(model.slides))))
+			]));
 };
 var $author$project$Main$view = function (model) {
 	return A2(
@@ -6001,7 +6004,6 @@ var $author$project$Main$view = function (model) {
 		_List_Nil,
 		_List_fromArray(
 			[
-				$author$project$Main$viewLoader(model),
 				$author$project$Main$viewControls(model),
 				$author$project$Main$viewSlide(model)
 			]));

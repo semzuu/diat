@@ -86,30 +86,28 @@ update msg model =
 view: Model -> Html.Html Msg
 view model =
   Html.div []
-  [ viewLoader model
-  , viewControls model
+  [ viewControls model
   , viewSlide model
   ]
 
 viewSlide: Model -> Html.Html Msg
 viewSlide model =
-  Markdown.toHtmlWith markdownOptions [] (
-    Array.get (model.index - 1) (Array.fromList model.slides)
-    |> Maybe.withDefault "Oops, no slide for you"
-    )
+  Html.div [ Html.Attributes.class "slide-view" ]
+  [ Markdown.toHtmlWith markdownOptions [ Html.Attributes.class "slide" ] (
+      Array.get (model.index - 1) (Array.fromList model.slides)
+      |> Maybe.withDefault "Oops, no slide for you"
+      )
+  ]
 
 viewControls: Model -> Html.Html Msg
 viewControls model =
-  Html.div [ Html.Attributes.style "background-color" "#ed1818" ]
+  Html.div
+  [ Html.Attributes.class "slide-controls"
+  ]
   [ Html.button [ Html.Events.onClick (KeyPress "ArrowLeft") ] [ Html.text "Prev" ]
   , Html.text ("Slide " ++ (String.fromInt model.index) ++ "/" ++ (String.fromInt (List.length model.slides)))
   , Html.button [ Html.Events.onClick (KeyPress "ArrowRight") ] [ Html.text "Next" ]
-  ]
-
-viewLoader: Model -> Html.Html Msg
-viewLoader model =
-  Html.div []
-  [ Html.input
+  , Html.input
     [ Html.Attributes.type_ "file"
     , Html.Attributes.id model.loaderId
     , Html.Events.on "change" (Json.Decode.succeed SlideSelected)
