@@ -9,7 +9,9 @@ Can use images and links
 ![cat_image](https://cataas.com/cat)  
 ---
 # Third Slide
-Can use <mark>HTML</mark> Tags directly
+Can use <mark>HTML</mark> Tags directly  
+
+![img](./img.jpg)
 ---
 <style>
     .slide{ background: linear-gradient(140deg, rgba(0,189,77,1) 0%, rgba(233,0,255,1) 100%);

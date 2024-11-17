@@ -1,5 +1,6 @@
 module Main exposing (main)
 
+import Http
 import Task
 import File
 import Browser
@@ -10,7 +11,6 @@ import Html.Events
 import Markdown
 import Array
 import Json.Decode
-import SlideLoader
 
 main =
   Browser.element
@@ -21,52 +21,60 @@ main =
     }
 
 type alias Model =
-  { loaderId: String
-  , index: Int
+  { index: Int
   , slides: List String
   }
 
+type HttpStatusMsg
+  = Loading
+  | Success String
+  | Failure
+
+url: String
+url = "http://localhost:6969/slides"
+
+handleHttp: HttpStatusMsg -> Model
+handleHttp msg =
+  case msg of
+    Loading ->
+      Model 1 ["Loading Slides... (˶ᵔ ᵕ ᵔ˶)"]
+    Success slides ->
+      Model 1 (String.trim slides |> String.split "---")
+    Failure ->
+      Model 1 ["Couldn't Load Slides (ᵕ—ᴗ—)"]
+
 type Msg
   = KeyPress String
-  | SlideSelected
-  | SlideLoaded SlideLoader.Slides
+  | GotResponse (Result Http.Error String)
 
 subscriptions: Model -> Sub Msg
 subscriptions model =
-  Sub.batch
-  [ Browser.Events.onKeyDown
+  Browser.Events.onKeyDown
     <| Json.Decode.map KeyPress
     <| Json.Decode.field "code" Json.Decode.string
-  , SlideLoader.slideContentRead SlideLoaded
-  ]
 
 init: () -> (Model, Cmd Msg)
 init _ =
-  ( Model "slide-loader" 1 []
-  , Cmd.none
+  ( handleHttp Loading
+  , Http.get
+    { url = url
+    , expect = Http.expectString GotResponse
+    }
   )
 
 update: Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
   case msg of
-    SlideSelected ->
-      ( model
-      , SlideLoader.slideSelected model.loaderId
-      )
-    SlideLoaded data ->
-      let
-        newSlides =
-          { content = data.content
-          , name = data.name
-          }
-      in
-        ( { model
-          | slides =
-            String.trim newSlides.content
-            |> String.split "---"
-          }
-        , Cmd.none
-        )
+    GotResponse result ->
+      case result of
+        Ok content ->
+          ( handleHttp <| Success content
+          , Cmd.none
+          )
+        Err _ ->
+          ( handleHttp <| Failure
+          , Cmd.none
+          )
     KeyPress keyCode ->
       case keyCode of
         "ArrowRight" ->
@@ -82,7 +90,6 @@ update msg model =
           , Cmd.none
           )
 
-
 view: Model -> Html.Html Msg
 view model =
   Html.div []
@@ -95,7 +102,7 @@ viewSlide model =
   Html.div [ Html.Attributes.class "slide-view" ]
   [ Markdown.toHtmlWith markdownOptions [ Html.Attributes.class "slide" ] (
       Array.get (model.index - 1) (Array.fromList model.slides)
-      |> Maybe.withDefault "Oops, no slide for you"
+      |> Maybe.withDefault ""
       )
   ]
 
@@ -107,11 +114,6 @@ viewControls model =
   [ Html.button [ Html.Events.onClick (KeyPress "ArrowLeft") ] [ Html.text "Prev" ]
   , Html.text ("Slide " ++ (String.fromInt model.index) ++ "/" ++ (String.fromInt (List.length model.slides)))
   , Html.button [ Html.Events.onClick (KeyPress "ArrowRight") ] [ Html.text "Next" ]
-  , Html.input
-    [ Html.Attributes.type_ "file"
-    , Html.Attributes.id model.loaderId
-    , Html.Events.on "change" (Json.Decode.succeed SlideSelected)
-    ] []
   ]
 
 markdownOptions: Markdown.Options

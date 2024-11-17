@@ -10,24 +10,6 @@
       var app = Elm.Main.init({
         node: document.getElementById("app"),
       });
-      app.ports.slideSelected.subscribe(function (id) {
-        var loader = document.getElementById(id);
-        if (loader == null) {
-          return;
-        }
-
-        var file = loader.files[0];
-        var reader = new FileReader();
-        reader.onload = (function (event) {
-          var encoded = event.target.result;
-          var portData = {
-            content: encoded,
-            name: file.name
-          };
-          app.ports.slideContentRead.send(portData);
-        });
-        reader.readAsText(file);
-      });
     </script>
   </body>
 </html>
